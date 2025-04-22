@@ -1,8 +1,10 @@
 use rand::{RngCore, thread_rng};
 use std::io::{self, Write};
+use std::num::NonZeroU32;
 
 mod aesgcm;
 mod dalek;
+mod kdf;
 mod mlkem;
 mod xcurve;
 
@@ -51,4 +53,22 @@ fn main() {
     println!("Message: {:?}", String::from_utf8_lossy(message));
     println!("Signature (hex): {}", hex::encode(&signature));
     println!("Verification result: {:?}", verification);
+
+    // PBKDF2 Key Derivation Demo
+    println!("\n5. PBKDF2 Key Derivation:");
+    let password = b"my secure password";
+    let mut salt = [0u8; 16];
+    thread_rng().fill_bytes(&mut salt);
+    let iterations = NonZeroU32::new(10000).unwrap();
+    let key_length = 32; // 256 bits
+
+    match kdf::derive_key(password, &salt, iterations, key_length) {
+        Ok(derived_key) => {
+            println!("Password: {:?}", String::from_utf8_lossy(password));
+            println!("Salt (hex): {}", hex::encode(&salt));
+            println!("Iterations: {}", iterations);
+            println!("Derived key (hex): {}", hex::encode(&derived_key));
+        }
+        Err(e) => println!("Key derivation error: {}", e),
+    }
 }
